@@ -12,14 +12,15 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface CSWebShot () <WebFrameLoadDelegate, WebDownloadDelegate>
+#define CSWebShotDefaultWidth       1280
 
-@property (strong, nonatomic) NSWindow * window;
+@interface CSWebShot () <WebFrameLoadDelegate, WebDownloadDelegate>
 
 @property (strong, nonatomic) WebView *webView;
 @property (nonatomic) WSAction action;
+@property (nonatomic, copy, readonly) WSCompletionBlock completion;
 
-- (void)performAction;
+- (void)performAction:(WSAction)action withCompletion:(WSCompletionBlock)completion;
 
 @end
 
@@ -28,69 +29,48 @@ NS_ASSUME_NONNULL_END
 @implementation CSWebShot
 
 - (instancetype)init {
-    return [self initWithURL:[NSURL URLWithString:@""] completion:nil];
+    return [self initWithURL:[NSURL URLWithString:@""]];
 }
 
 - (instancetype)initWithURL:(NSURL *)URL {
-    return [self initWithURL:URL completion:nil];
-}
-
-- (instancetype)initWithURL:(NSURL *)URL completion:(WSCompletionBlock)completion {
     self = [super init];
     if ( self != nil ) {
         self.URL = URL;
-        self.completion = completion;
 
+        self.renderingTimeout = 2;
+        self.action = WSActionNone;
         self.delegateQueue = dispatch_get_main_queue();
+        self.browserWidth = CSWebShotDefaultWidth;
     }
     return self;
 }
 
 #pragma mark - Actions
 
-- (void)webshot {
-    return [self webshotWithCompletion:nil];
-}
-
 - (void)webshotWithCompletion:(WSCompletionBlock)completion {
-    if ( completion ) {
-        self.completion = completion;
-    }
-
-    self.action = WSActionWebShot;
-    [self performAction];
-}
-
-- (void)renderedHTML {
-    return [self renderedHTMLWithCompletion:nil];
+    [self performAction:WSActionWebShot withCompletion:completion];
 }
 
 - (void)renderedHTMLWithCompletion:(WSCompletionBlock)completion {
-    if ( completion ) {
-        self.completion = completion;
-    }
-
-    self.action = WSActionFetchHTML;
-    [self performAction];
+    [self performAction:WSActionFetchHTML withCompletion:completion];
 }
 
-- (void)performAction {
+- (void)performAction:(WSAction)action withCompletion:(WSCompletionBlock)completion {
+    _action = action;
+    _completion = completion;
     if ( self.URL.absoluteString.length == 0 || !([self.URL.absoluteString hasPrefix:@"http://"] || [self.URL.absoluteString hasPrefix:@"https://"]) ) {
-
-        WSAction action = self.action;
-        WSCompletionBlock __weak completion = self.completion;
-        dispatch_queue_t __weak delegateQueue = self.delegateQueue;
-
         NSError* error = [NSError errorWithDomain:CSWebShotErrorDomain code:CSWebShotErrorInvalidURL userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"An invalid URL was provided.",), NSURLErrorFailingURLErrorKey: self.URL ? : @"(null)" }];
-
-        dispatch_async(delegateQueue, ^{ @autoreleasepool {
+        dispatch_async(self.delegateQueue, ^{ @autoreleasepool {
             completion(action, nil, error);
         }});
         
         return;
     }
+
+    CGFloat browserWidth = self.browserWidth;
+
     dispatch_barrier_async(dispatch_get_main_queue(), ^{ @autoreleasepool {
-        self.webView = [[WebView alloc] initWithFrame:NSMakeRect(0, 0, 1280, 10)];
+        self.webView = [[WebView alloc] initWithFrame:NSMakeRect(0, 0, browserWidth, 0)];
         self.webView.frameLoadDelegate = self;
         self.webView.downloadDelegate = self;
         self.webView.continuousSpellCheckingEnabled = NO;

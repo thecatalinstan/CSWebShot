@@ -18,8 +18,6 @@ FOUNDATION_EXPORT const unsigned char CSWebShotVersionString[];
 #define CSWebShotErrorInvalidURL       101
 #define CSWebShotErrorNoData           102
 
-NS_ASSUME_NONNULL_BEGIN
-
 typedef NS_ENUM(NSInteger, WSAction) {
     WSActionNone,
     WSActionWebShot,
@@ -28,20 +26,22 @@ typedef NS_ENUM(NSInteger, WSAction) {
 
 typedef void(^WSCompletionBlock)(WSAction action, NSData * _Nullable data, NSError * _Nullable error);
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface CSWebShot : NSObject
 
-@property (nonatomic, strong) NSURL * URL;
-@property (nonatomic, copy, nullable) WSCompletionBlock completion;
+@property (nonatomic, strong, nullable) NSURL * URL;
+
+@property (nonatomic) NSTimeInterval renderingTimeout;
+
+@property (nonatomic) CGFloat browserWidth;
+
 @property (nonatomic, strong) dispatch_queue_t delegateQueue;
 
-- (instancetype)initWithURL:(NSURL *)URL;
-- (instancetype)initWithURL:(NSURL *)URL completion:(WSCompletionBlock _Nullable)completion NS_DESIGNATED_INITIALIZER;
+- (nonnull instancetype)initWithURL:(NSURL * _Nullable)URL NS_DESIGNATED_INITIALIZER;
 
-- (void)webshot;
-- (void)webshotWithCompletion:(WSCompletionBlock _Nullable)completion;
-
-- (void)renderedHTML;
-- (void)renderedHTMLWithCompletion:(WSCompletionBlock _Nullable)completion;
+- (void)webshotWithCompletion:(WSCompletionBlock)completion;
+- (void)renderedHTMLWithCompletion:(WSCompletionBlock)completion;
 
 @end
 

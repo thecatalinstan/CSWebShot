@@ -12,13 +12,21 @@ import CSWebShot
 class CSWebShotTests: XCTestCase {
 
     func testWebshot() {
+        let width: CGFloat = 1920
+
         let expectation = self.expectation(description: "Webshot generated")
         let webshotFetcher = CSWebShot(url: URL(string: "https://criollo.io/")!)
+        webshotFetcher.browserWidth = width
 
         webshotFetcher.webshot { (action, data, error) in
             XCTAssertTrue(action == WSAction.webShot)
             XCTAssertNotNil(data)
             XCTAssertNil(error)
+
+            let image = NSImage(data: data!)
+            XCTAssertNotNil(image)
+
+            XCTAssertTrue(image?.size.width == width)
             expectation.fulfill()
         }
 
