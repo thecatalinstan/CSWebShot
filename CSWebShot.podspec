@@ -1,7 +1,7 @@
 Pod::Spec.new do |s|
 
   s.name                        =  "CSWebShot"
-  s.version                     =  "1.0.0"
+  s.version                     =  "1.0.1"
   s.license                     =  "MIT"
 
   s.summary                     =  "A library for getting screenshots and rendered HTML source code of webpages."
