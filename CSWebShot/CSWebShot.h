@@ -79,7 +79,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 /**
  *  The width, in pixels, of the browser window that will be used to render the 
- *  page. This is usefull only when requesting PNG screenshots.
+ *  page. This is usefull only when requesting PNG screenshots. *Defaults to
+ *  1280px*.
  *
  *  @discussion
  *  The height of the page cannot be specified as yet. WebShot will attempt to 
@@ -132,7 +133,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (void)webshotWithCompletion:(WSCompletionBlock)completion;
  
 /**
- *  @name Fetching rendered HTML content of the page
+ *  @name Fetching the rendered HTML content of the page
  */
 
 /**
