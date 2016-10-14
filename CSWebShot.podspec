@@ -17,7 +17,7 @@ Pod::Spec.new do |s|
   s.source_files                = "CSWebShot/*.{h,m}"
   s.public_header_files         = "CSWebShot/CSWebShot.h"
 
-  s.osx.deployment_target       = "10.7"
+  s.osx.deployment_target       = "10.8"
   s.osx.frameworks              = "Foundation"
 
   s.requires_arc                = true
