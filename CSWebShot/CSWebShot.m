@@ -94,42 +94,44 @@ NS_ASSUME_NONNULL_END
     WSCompletionBlock __weak completion = self.completion;
     dispatch_queue_t __weak delegateQueue = self.delegateQueue;
 
-    dispatch_barrier_async(dispatch_get_main_queue(), ^{ @autoreleasepool {
-        NSData* returnData;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.renderingTimeout * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_barrier_async(dispatch_get_main_queue(), ^{ @autoreleasepool {
+            NSData* returnData;
 
-        if ( action == WSActionFetchHTML ) {
-            NSString* renderedContent = ((DOMHTMLElement*)frame.DOMDocument.documentElement).outerHTML;
-            returnData = [renderedContent dataUsingEncoding:NSUTF8StringEncoding];
-        } else if ( action == WSActionWebShot ) {
-            NSView *webFrameViewDocView = frame.frameView.documentView;
-            NSRect webFrameRect = webFrameViewDocView.frame;
-            NSRect newWebViewRect = NSMakeRect(0, 0, NSWidth(webFrameRect), NSHeight(webFrameRect) == 0 ? frame.webView.fittingSize.height : NSHeight(webFrameRect));
+            if ( action == WSActionFetchHTML ) {
+                NSString* renderedContent = ((DOMHTMLElement*)frame.DOMDocument.documentElement).outerHTML;
+                returnData = [renderedContent dataUsingEncoding:NSUTF8StringEncoding];
+            } else if ( action == WSActionWebShot ) {
+                NSView *webFrameViewDocView = frame.frameView.documentView;
+                NSRect webFrameRect = webFrameViewDocView.frame;
+                NSRect newWebViewRect = NSMakeRect(0, 0, NSWidth(webFrameRect), NSHeight(webFrameRect) == 0 ? frame.webView.fittingSize.height : NSHeight(webFrameRect));
 
-            NSRect cacheRect = newWebViewRect;
-            NSSize imgSize = cacheRect.size;
-            NSRect srcRect = NSZeroRect;
-            srcRect.size = imgSize;
-            srcRect.origin.y = cacheRect.size.height - imgSize.height;
+                NSRect cacheRect = newWebViewRect;
+                NSSize imgSize = cacheRect.size;
+                NSRect srcRect = NSZeroRect;
+                srcRect.size = imgSize;
+                srcRect.origin.y = cacheRect.size.height - imgSize.height;
 
-            NSRect destRect = NSZeroRect;
-            destRect.size = imgSize;
+                NSRect destRect = NSZeroRect;
+                destRect.size = imgSize;
 
-            NSBitmapImageRep *bitmapRep = [webFrameViewDocView bitmapImageRepForCachingDisplayInRect:cacheRect];
-            [webFrameViewDocView cacheDisplayInRect:cacheRect toBitmapImageRep:bitmapRep];
+                NSBitmapImageRep *bitmapRep = [webFrameViewDocView bitmapImageRepForCachingDisplayInRect:cacheRect];
+                [webFrameViewDocView cacheDisplayInRect:cacheRect toBitmapImageRep:bitmapRep];
 
-            NSImage *image = [[NSImage alloc] initWithSize:imgSize];
-            [image lockFocus];
-            [bitmapRep drawInRect:destRect fromRect:srcRect operation:NSCompositeCopy fraction:1.0 respectFlipped:YES hints:nil];
-            [image unlockFocus];
+                NSImage *image = [[NSImage alloc] initWithSize:imgSize];
+                [image lockFocus];
+                [bitmapRep drawInRect:destRect fromRect:srcRect operation:NSCompositeCopy fraction:1.0 respectFlipped:YES hints:nil];
+                [image unlockFocus];
 
-            NSBitmapImageRep* rep = [[NSBitmapImageRep alloc] initWithData:image.TIFFRepresentation];;
-            returnData = [rep representationUsingType:NSPNGFileType properties:@{}];
-        }
+                NSBitmapImageRep* rep = [[NSBitmapImageRep alloc] initWithData:image.TIFFRepresentation];;
+                returnData = [rep representationUsingType:NSPNGFileType properties:@{}];
+            }
 
-        dispatch_async(delegateQueue, ^{ @autoreleasepool {
-            completion(action, returnData, nil);
+            dispatch_async(delegateQueue, ^{ @autoreleasepool {
+                completion(action, returnData, nil);
+            }});
         }});
-    }});
+    });
 }
 
 //- (void)webView:(WebView *)sender willPerformClientRedirectToURL:(NSURL *)URL delay:(NSTimeInterval)seconds fireDate:(NSDate *)date forFrame:(WebFrame *)frame {
